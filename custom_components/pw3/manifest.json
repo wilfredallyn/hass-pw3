@@ -1,0 +1,10 @@
+{
+  "domain": "pw3",
+  "name": "pw3",
+  "documentation": "https://github.com/wilfredallyn/pw3",
+  "issue_tracker": "https://github.com/wilfredallyn/pw3/issues",
+  "dependencies": [],
+  "config_flow": true,
+  "codeowners": ["@wilfredallyn"],
+  "requirements": []
+}
