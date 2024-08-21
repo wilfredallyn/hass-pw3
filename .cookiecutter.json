@@ -1,0 +1,13 @@
+{
+  "_checkout": null,
+  "_output_dir": "/Users/larry/Documents",
+  "_repo_dir": "cookiecutter-homeassistant-custom-component",
+  "_template": "cookiecutter-homeassistant-custom-component",
+  "class_name_prefix": "Pw3",
+  "domain_name": "pw3",
+  "friendly_name": "pw3",
+  "github_user": "wilfredallyn",
+  "project_name": "pw3",
+  "test_suite": "yes",
+  "version": "0.0.0"
+}
