@@ -15,23 +15,18 @@ class Pw3DataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, pw: Powerwall) -> None:
         """Initialize."""
         self.pw = pw
+        self.platforms = []
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
+            # always_update=False,
         )
 
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            solar_raw = await self.hass.async_add_executor_job(
-                self.pw.solar, verbose=True
-            )
-            if solar_raw is None:
-                raise UpdateFailed("Failed to fetch solar data")
-
-            at = solar_raw["last_communication_time"]
             power = await self.hass.async_add_executor_job(self.pw.power)
             grid = await self.hass.async_add_executor_job(self.pw.grid)
             perc = await self.hass.async_add_executor_job(
@@ -44,7 +39,8 @@ class Pw3DataUpdateCoordinator(DataUpdateCoordinator):
                 "home": round(power["load"] / 1000.0, 2),
                 "grid": round(grid / 1000.0, 2),
                 "percentage": round(perc["percentage"], 2),
-                "last_updated": at,
+                "last_updated": self.hass.loop.time(),
             }
         except Exception as exception:
+            _LOGGER.error(f"Error updating Powerwall data: {str(exception)}")
             raise UpdateFailed() from exception

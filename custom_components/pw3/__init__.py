@@ -43,25 +43,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
 
-    authpath = entry.data.get("authpath")
     pw_email = entry.data.get("pw_email")
     pw_timezone = entry.data.get("pw_timezone")
 
-    pw = Powerwall(
-        authpath=authpath,
-        host="",
-        password="",
-        email=pw_email,
-        timezone=pw_timezone,
-        cloudmode=True,
-    )
+    if not pw_email:
+        _LOGGER.error("No email provided in configuration")
+        return False
+
+    def init_powerwall():
+        return Powerwall(
+            authpath=hass.config.path(),
+            host="",
+            password="",
+            email=pw_email,
+            timezone=pw_timezone,
+            cloudmode=True,
+        )
+
+    try:
+        pw = await hass.async_add_executor_job(init_powerwall)
+    except Exception as e:
+        _LOGGER.error(f"Error initializing Powerwall: {str(e)}")
+        raise ConfigEntryNotReady from e
 
     coordinator = Pw3DataUpdateCoordinator(hass, pw)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
+    )
 
     entry.add_update_listener(async_reload_entry)
     return True
