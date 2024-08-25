@@ -6,5 +6,7 @@
   "dependencies": [],
   "config_flow": true,
   "codeowners": ["@wilfredallyn"],
-  "requirements": []
+  "requirements": ["pypowerwall"],
+  "version": "0.0.1",
+  "integration_type": "integration"
 }
