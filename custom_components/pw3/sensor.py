@@ -89,7 +89,7 @@ class PowerwallSensor(CoordinatorEntity, SensorEntity):
         """Return the state attributes of the sensor."""
         attributes = super().extra_state_attributes or {}
         attributes["last_updated"] = self.coordinator.data.get("last_updated")
-        if self._sensor_type == "grid":
+        if self._sensor_type == "grid" and self.state is not None:
             attributes["power_type"] = "production" if self.state < 0 else "consumption"
         return attributes
 

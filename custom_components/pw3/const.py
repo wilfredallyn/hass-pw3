@@ -20,7 +20,7 @@ BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
 ENERGY_SENSOR = "energy"
-PLATFORMS = [SENSOR, ENERGY_SENSOR]
+PLATFORMS = [SENSOR]
 
 
 # Configuration and options
