@@ -8,6 +8,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import logging
 from .const import DOMAIN
 
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorStateClass,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +44,7 @@ class PowerwallSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._name = name
         self._unit = unit
+        self._attr_unique_id = f"powerwall_{sensor_type}"
 
     @property
     def name(self):
@@ -47,23 +52,38 @@ class PowerwallSensor(CoordinatorEntity, SensorEntity):
         return f"Powerwall {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get(self._sensor_type)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return "power" if self._unit == "kW" else "battery"
+        if self._unit == "kW":
+            return SensorDeviceClass.POWER
+        elif self._unit == "%":
+            return SensorDeviceClass.BATTERY
+        return None
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        if self._unit == "kW":
+            return SensorStateClass.MEASUREMENT
+        elif self._unit == "%":
+            return SensorStateClass.MEASUREMENT
+        return None
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            "last_updated": self.coordinator.data.get("last_updated"),
-        }
+        attributes = super().extra_state_attributes or {}
+        attributes["last_updated"] = self.coordinator.data.get("last_updated")
+        if self._sensor_type == "grid":
+            attributes["power_type"] = "production" if self.state < 0 else "consumption"
+        return attributes
