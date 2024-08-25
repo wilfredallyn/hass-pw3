@@ -3,7 +3,7 @@
   "name": "pw3",
   "documentation": "https://github.com/wilfredallyn/pw3",
   "issue_tracker": "https://github.com/wilfredallyn/pw3/issues",
-  "dependencies": [],
+  "dependencies": ["energy"],
   "config_flow": true,
   "codeowners": ["@wilfredallyn"],
   "requirements": ["pypowerwall"],

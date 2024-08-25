@@ -19,13 +19,18 @@ BINARY_SENSOR_DEVICE_CLASS = "connectivity"
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [SENSOR]
+ENERGY_SENSOR = "energy"
+PLATFORMS = [SENSOR, ENERGY_SENSOR]
 
 
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_SOLAR = "solar"
+CONF_BATTERY = "battery"
+CONF_HOME = "home"
+CONF_GRID = "grid"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
