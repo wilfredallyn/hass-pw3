@@ -35,8 +35,14 @@ async def async_setup_entry(
         PowerwallEnergySensor(coordinator, "battery", "Battery Energy", "kWh"),
         PowerwallEnergySensor(coordinator, "home", "Home Energy", "kWh"),
         PowerwallEnergySensor(coordinator, "grid", "Grid Energy", "kWh"),
-        BatteryChargingSensor(coordinator),
-        BatteryDischargingSensor(coordinator),
+        BatteryPowerSensor(coordinator, "charging"),
+        BatteryPowerSensor(coordinator, "discharging"),
+        PowerwallEnergySensor(
+            coordinator, "battery_charging", "Battery Charging Energy", "kWh"
+        ),
+        PowerwallEnergySensor(
+            coordinator, "battery_discharging", "Battery Discharging Energy", "kWh"
+        ),
     ]
 
     async_add_entities(sensors, True)
@@ -109,25 +115,21 @@ class PowerwallEnergySensor(PowerwallSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        current_power = self.coordinator.data.get(self._sensor_type)
+        current_power = self.coordinator.data.get(self._sensor_type, 0)
         current_time = datetime.now()
 
         if self._last_update is not None:
-            time_diff = (
-                current_time - self._last_update
-            ).total_seconds() / 3600  # Convert to hours
+            time_diff = (current_time - self._last_update).total_seconds() / 3600
             self._energy_value += current_power * time_diff
 
         self._last_update = current_time
 
-        # Report energy hourly
         if self._last_reported is None or (
             current_time - self._last_reported
         ) >= timedelta(hours=1):
             self._last_reported = current_time
             return round(self._energy_value, 3)
 
-        # Return None if it's not time to report yet
         return None
 
     @property
@@ -143,46 +145,26 @@ class PowerwallEnergySensor(PowerwallSensor):
         return "kWh"
 
 
-class BatteryChargingSensor(PowerwallSensor):
-    """Representation of a Battery Charging sensor."""
+class BatteryPowerSensor(PowerwallSensor):
+    """Representation of a Battery Power sensor for charging and discharging."""
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator, sensor_type):
         """Initialize the sensor."""
-        super().__init__(coordinator, "battery_charging", "Battery Charging", "kW")
-        self._attr_unique_id = "powerwall_battery_charging"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        battery_power = self.coordinator.data.get("battery")
-        return round(-battery_power, 3) if battery_power < 0 else 0
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return SensorDeviceClass.POWER
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return SensorStateClass.MEASUREMENT
-
-
-class BatteryDischargingSensor(PowerwallSensor):
-    """Representation of a Battery Discharging sensor."""
-
-    def __init__(self, coordinator):
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator, "battery_discharging", "Battery Discharging", "kW"
+        name = (
+            "Battery Charging" if sensor_type == "charging" else "Battery Discharging"
         )
-        self._attr_unique_id = "powerwall_battery_discharging"
+        super().__init__(coordinator, f"battery_{sensor_type}", name, "kW")
+        self._attr_unique_id = f"powerwall_battery_{sensor_type}"
+        self._sensor_type = sensor_type
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        battery_power = self.coordinator.data.get("battery")
-        return round(battery_power, 3) if battery_power > 0 else 0
+        battery_power = self.coordinator.data.get("battery", 0)
+        if self._sensor_type == "charging":
+            return round(-battery_power, 3) if battery_power < 0 else 0
+        else:  # discharging
+            return round(battery_power, 3) if battery_power > 0 else 0
 
     @property
     def device_class(self):
