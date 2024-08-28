@@ -35,6 +35,8 @@ async def async_setup_entry(
         PowerwallEnergySensor(coordinator, "battery", "Battery Energy", "kWh"),
         PowerwallEnergySensor(coordinator, "home", "Home Energy", "kWh"),
         PowerwallEnergySensor(coordinator, "grid", "Grid Energy", "kWh"),
+        BatteryChargingSensor(coordinator),
+        BatteryDischargingSensor(coordinator),
     ]
 
     async_add_entities(sensors, True)
@@ -139,3 +141,55 @@ class PowerwallEnergySensor(PowerwallSensor):
     @property
     def native_unit_of_measurement(self):
         return "kWh"
+
+
+class BatteryChargingSensor(PowerwallSensor):
+    """Representation of a Battery Charging sensor."""
+
+    def __init__(self, coordinator):
+        """Initialize the sensor."""
+        super().__init__(coordinator, "battery_charging", "Battery Charging", "kW")
+        self._attr_unique_id = "powerwall_battery_charging"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        battery_power = self.coordinator.data.get("battery")
+        return round(-battery_power, 3) if battery_power < 0 else 0
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return SensorDeviceClass.POWER
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SensorStateClass.MEASUREMENT
+
+
+class BatteryDischargingSensor(PowerwallSensor):
+    """Representation of a Battery Discharging sensor."""
+
+    def __init__(self, coordinator):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator, "battery_discharging", "Battery Discharging", "kW"
+        )
+        self._attr_unique_id = "powerwall_battery_discharging"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        battery_power = self.coordinator.data.get("battery")
+        return round(battery_power, 3) if battery_power > 0 else 0
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return SensorDeviceClass.POWER
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SensorStateClass.MEASUREMENT
