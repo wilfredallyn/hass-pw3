@@ -1,4 +1,5 @@
 """Constants for pw3."""
+
 # Base component constants
 NAME = "pw3"
 DOMAIN = "pw3"
@@ -18,13 +19,18 @@ BINARY_SENSOR_DEVICE_CLASS = "connectivity"
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+ENERGY_SENSOR = "energy"
+PLATFORMS = [SENSOR]
 
 
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_SOLAR = "solar"
+CONF_BATTERY = "battery"
+CONF_HOME = "home"
+CONF_GRID = "grid"
 
 # Defaults
 DEFAULT_NAME = DOMAIN

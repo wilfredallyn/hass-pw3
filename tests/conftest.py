@@ -1,4 +1,5 @@
 """Global fixtures for pw3 integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -37,3 +38,14 @@ def error_get_data_fixture():
         side_effect=Exception,
     ):
         yield
+
+
+@pytest.fixture
+def mock_powerwall():
+    with patch("custom_components.pw3.Powerwall") as mock_pw:
+        yield mock_pw
+
+
+@pytest.fixture
+def mock_config_entry():
+    return {"pw_email": "test@example.com", "pw_timezone": "America/New_York"}
