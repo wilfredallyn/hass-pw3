@@ -4,6 +4,7 @@ Custom integration to integrate pw3 with Home Assistant.
 For more details about this integration, please refer to
 https://github.com/wilfredallyn/pw3
 """
+
 import asyncio
 import logging
 from datetime import timedelta
@@ -15,6 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from pypowerwall import Powerwall
 
 from .api import Pw3ApiClient
 from .const import CONF_PASSWORD
@@ -22,6 +24,7 @@ from .const import CONF_USERNAME
 from .const import DOMAIN
 from .const import PLATFORMS
 from .const import STARTUP_MESSAGE
+from .coordinator import Pw3DataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -39,30 +42,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
 
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    pw_email = entry.data.get("pw_email")
+    pw_timezone = entry.data.get("pw_timezone")
 
-    session = async_get_clientsession(hass)
-    client = Pw3ApiClient(username, password, session)
+    if not pw_email:
+        _LOGGER.error("No email provided in configuration")
+        return False
 
-    coordinator = Pw3DataUpdateCoordinator(hass, client=client)
-    await coordinator.async_refresh()
+    def init_powerwall():
+        return Powerwall(
+            authpath=hass.config.path(),
+            host="",
+            password="",
+            email=pw_email,
+            timezone=pw_timezone,
+            cloudmode=True,
+        )
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    try:
+        pw = await hass.async_add_executor_job(init_powerwall)
+    except Exception as e:
+        _LOGGER.error(f"Error initializing Powerwall: {str(e)}")
+        raise ConfigEntryNotReady from e
+
+    coordinator = Pw3DataUpdateCoordinator(hass, pw)
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        if entry.options.get(platform, True):
-            coordinator.platforms.append(platform)
-            hass.async_add_job(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
-
-    entry.add_update_listener(async_reload_entry)
-    return True
-
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
+    )
 
 class Pw3DataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
