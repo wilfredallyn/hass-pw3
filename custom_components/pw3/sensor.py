@@ -26,40 +26,22 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
-        PowerwallSensor(coordinator, "solar", "Solar Power", "kW", entry.entry_id),
-        PowerwallSensor(coordinator, "battery", "Battery Power", "kW", entry.entry_id),
-        PowerwallSensor(coordinator, "home", "Home Power", "kW", entry.entry_id),
-        PowerwallSensor(coordinator, "grid", "Grid Power", "kW", entry.entry_id),
-        PowerwallSensor(
-            coordinator, "percentage", "Battery Percentage", "%", entry.entry_id
+        PowerwallSensor(coordinator, "solar", "Solar Power", "kW"),
+        PowerwallSensor(coordinator, "battery", "Battery Power", "kW"),
+        PowerwallSensor(coordinator, "home", "Home Power", "kW"),
+        PowerwallSensor(coordinator, "grid", "Grid Power", "kW"),
+        PowerwallSensor(coordinator, "percentage", "Battery Percentage", "%"),
+        PowerwallEnergySensor(coordinator, "solar", "Solar Energy", "kWh"),
+        PowerwallEnergySensor(coordinator, "battery", "Battery Energy", "kWh"),
+        PowerwallEnergySensor(coordinator, "home", "Home Energy", "kWh"),
+        PowerwallEnergySensor(coordinator, "grid", "Grid Energy", "kWh"),
+        BatteryPowerSensor(coordinator, "charging"),
+        BatteryPowerSensor(coordinator, "discharging"),
+        PowerwallEnergySensor(
+            coordinator, "battery_charging", "Battery Charging Energy", "kWh"
         ),
         PowerwallEnergySensor(
-            coordinator, "solar", "Solar Energy", "kWh", entry.entry_id
-        ),
-        PowerwallEnergySensor(
-            coordinator, "battery", "Battery Energy", "kWh", entry.entry_id
-        ),
-        PowerwallEnergySensor(
-            coordinator, "home", "Home Energy", "kWh", entry.entry_id
-        ),
-        PowerwallEnergySensor(
-            coordinator, "grid", "Grid Energy", "kWh", entry.entry_id
-        ),
-        BatteryPowerSensor(coordinator, "charging", entry.entry_id),
-        BatteryPowerSensor(coordinator, "discharging", entry.entry_id),
-        PowerwallEnergySensor(
-            coordinator,
-            "battery_charging",
-            "Battery Charging Energy",
-            "kWh",
-            entry.entry_id,
-        ),
-        PowerwallEnergySensor(
-            coordinator,
-            "battery_discharging",
-            "Battery Discharging Energy",
-            "kWh",
-            entry.entry_id,
+            coordinator, "battery_discharging", "Battery Discharging Energy", "kWh"
         ),
     ]
 
@@ -69,14 +51,13 @@ async def async_setup_entry(
 class PowerwallSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Powerwall sensor."""
 
-    def __init__(self, coordinator, sensor_type, name, unit, entry_id):
+    def __init__(self, coordinator, sensor_type, name, unit):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._sensor_type = sensor_type
         self._name = name
         self._unit = unit
-        self._entry_id = entry_id
-        self._attr_unique_id = f"{entry_id}_powerwall_{sensor_type}"
+        self._attr_unique_id = f"powerwall_{sensor_type}"
 
     @property
     def name(self):
@@ -124,9 +105,9 @@ class PowerwallSensor(CoordinatorEntity, SensorEntity):
 class PowerwallEnergySensor(PowerwallSensor):
     """Representation of a Powerwall energy sensor."""
 
-    def __init__(self, coordinator, sensor_type, name, unit, entry_id):
-        super().__init__(coordinator, sensor_type, name, unit, entry_id)
-        self._attr_unique_id = f"{entry_id}_powerwall_{sensor_type}_energy"
+    def __init__(self, coordinator, sensor_type, name, unit):
+        super().__init__(coordinator, sensor_type, name, unit)
+        self._attr_unique_id = f"powerwall_{sensor_type}_energy"
         self._last_update = None
         self._energy_value = 0
         self._last_reported = None
@@ -167,13 +148,13 @@ class PowerwallEnergySensor(PowerwallSensor):
 class BatteryPowerSensor(PowerwallSensor):
     """Representation of a Battery Power sensor for charging and discharging."""
 
-    def __init__(self, coordinator, sensor_type, entry_id):
+    def __init__(self, coordinator, sensor_type):
         """Initialize the sensor."""
         name = (
             "Battery Charging" if sensor_type == "charging" else "Battery Discharging"
         )
-        super().__init__(coordinator, f"battery_{sensor_type}", name, "kW", entry_id)
-        self._attr_unique_id = f"{entry_id}_powerwall_battery_{sensor_type}"
+        super().__init__(coordinator, f"battery_{sensor_type}", name, "kW")
+        self._attr_unique_id = f"powerwall_battery_{sensor_type}"
         self._sensor_type = sensor_type
 
     @property
