@@ -20,6 +20,10 @@ from .const import PLATFORMS
 from .const import STARTUP_MESSAGE
 from .coordinator import Pw3DataUpdateCoordinator
 
+from homeassistant.helpers import config_validation as cv
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
