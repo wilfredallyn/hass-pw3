@@ -1,5 +1,6 @@
-from unittest.mock import patch, MagicMock
-from homeassistant.const import CONF_EMAIL, CONF_TIMEZONE
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
 from custom_components.pw3 import sensor
 
 

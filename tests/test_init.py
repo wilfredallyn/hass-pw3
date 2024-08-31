@@ -1,4 +1,5 @@
 """Test pw3 setup process."""
+
 import pytest
 from custom_components.pw3 import (
     async_reload_entry,
@@ -36,15 +37,15 @@ async def test_setup_unload_and_reload_entry(hass, bypass_get_data):
     # call, no code from custom_components/pw3/api.py actually runs.
     assert await async_setup_entry(hass, config_entry)
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
-    assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == Pw3DataUpdateCoordinator
+    assert isinstance(
+        hass.data[DOMAIN][config_entry.entry_id], Pw3DataUpdateCoordinator
     )
 
     # Reload the entry and assert that the data from above is still there
     assert await async_reload_entry(hass, config_entry) is None
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
-    assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == Pw3DataUpdateCoordinator
+    assert isinstance(
+        hass.data[DOMAIN][config_entry.entry_id], Pw3DataUpdateCoordinator
     )
 
     # Unload the entry and verify that the data has been removed

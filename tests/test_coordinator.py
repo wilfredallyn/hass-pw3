@@ -1,7 +1,6 @@
-from unittest.mock import patch, MagicMock
 import pytest
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from custom_components.pw3.coordinator import Pw3DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 async def test_coordinator_update(hass, mock_powerwall):

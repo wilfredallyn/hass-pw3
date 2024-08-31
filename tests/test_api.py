@@ -1,4 +1,5 @@
 """Tests for pw3 api."""
+
 import asyncio
 
 import aiohttp
