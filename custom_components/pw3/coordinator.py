@@ -30,19 +30,30 @@ class Pw3DataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             power = await self.hass.async_add_executor_job(self.pw.power)
-            grid = await self.hass.async_add_executor_job(self.pw.grid)
+            grid_raw = await self.hass.async_add_executor_job(self.pw.grid)
             perc = await self.hass.async_add_executor_job(
                 self.pw.poll, "/api/system_status/soe"
             )
+            battery = self._split_power_val(power["battery"])
+            grid = self._split_power_val(grid_raw)
 
-            return {
-                "solar": round(power["solar"] / 1000.0, 2),
-                "battery": round(power["battery"] / 1000.0, 2),
-                "home": round(power["load"] / 1000.0, 2),
-                "grid": round(grid / 1000.0, 2),
+            data = {
+                "solar": round(power["solar"]),
+                "home": round(power["load"]),
+                "battery_consumption": round(battery["consumption"]),
+                "battery_production": round(battery["production"]),
+                "grid_consumption": round(grid["consumption"]),
+                "grid_production": round(grid["production"]),
                 "percentage": round(perc["percentage"], 2),
                 "last_updated": self.hass.loop.time(),
             }
+            return data
         except Exception as exception:
             _LOGGER.error(f"Error updating Powerwall data: {str(exception)}")
             raise UpdateFailed() from exception
+
+    def _split_power_val(self, val: float) -> dict:
+        if val < 0:
+            return {"consumption": 0, "production": abs(val)}
+        else:
+            return {"consumption": val, "production": 0}
