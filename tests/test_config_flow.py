@@ -6,7 +6,6 @@ import pytest
 from custom_components.pw3.const import DOMAIN
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
-from custom_components.pw3.config_flow import Pw3ConfigFlow
 
 
 # This fixture bypasses the actual setup of the integration

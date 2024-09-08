@@ -1,18 +1,18 @@
 """Sensor platform for pw3."""
 
-from datetime import datetime, timedelta
+import logging
+from datetime import datetime
+from datetime import timedelta
+
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import logging
-from .const import DOMAIN
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

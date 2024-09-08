@@ -2,14 +2,8 @@
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .api import Pw3ApiClient
-from .const import CONF_PASSWORD
-from .const import CONF_USERNAME
 from .const import DOMAIN
-from .const import PLATFORMS
 
 
 class Pw3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

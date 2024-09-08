@@ -13,19 +13,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import UpdateFailed
-
 from pypowerwall import Powerwall
 
-from .api import Pw3ApiClient
-from .const import CONF_PASSWORD
-from .const import CONF_USERNAME
 from .const import DOMAIN
 from .const import PLATFORMS
 from .const import STARTUP_MESSAGE
 from .coordinator import Pw3DataUpdateCoordinator
+
+from homeassistant.helpers import config_validation as cv
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

@@ -1,12 +1,13 @@
 {
   "domain": "pw3",
   "name": "pw3",
-  "documentation": "https://github.com/wilfredallyn/pw3",
-  "issue_tracker": "https://github.com/wilfredallyn/pw3/issues",
-  "dependencies": ["energy"],
-  "config_flow": true,
   "codeowners": ["@wilfredallyn"],
+  "config_flow": true,
+  "dependencies": ["energy"],
+  "documentation": "https://github.com/wilfredallyn/pw3",
+  "integration_type": "entity",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/wilfredallyn/pw3/issues",
   "requirements": ["pypowerwall"],
-  "version": "0.0.1",
-  "integration_type": "integration"
+  "version": "0.0.1"
 }

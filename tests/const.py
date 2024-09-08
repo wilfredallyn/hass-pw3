@@ -1,4 +1,5 @@
 """Constants for pw3 tests."""
+
 from custom_components.pw3.const import (
     CONF_PASSWORD,
 )
