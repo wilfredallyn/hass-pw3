@@ -1,4 +1,4 @@
 pip==21.0
 pre-commit==2.9.3
 flake8==3.8.4
-ruff==0.6.1
+ruff==0.6.6
