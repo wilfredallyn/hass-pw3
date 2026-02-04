@@ -9,24 +9,57 @@ import asyncio
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Config, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from pypowerwall import Powerwall
 
-from .const import DOMAIN
-from .const import PLATFORMS
-from .const import STARTUP_MESSAGE
+from .const import (
+    ATTR_GRID_CHARGING,
+    ATTR_OPERATION_MODE,
+    ATTR_RESERVE_LEVEL,
+    DOMAIN,
+    MODE_AUTONOMOUS,
+    MODE_BACKUP,
+    MODE_SELF_CONSUMPTION,
+    PLATFORMS,
+    SERVICE_SET_GRID_CHARGING,
+    SERVICE_SET_MODE,
+    SERVICE_SET_RESERVE,
+    STARTUP_MESSAGE,
+)
 from .coordinator import Pw3DataUpdateCoordinator
-
-from homeassistant.helpers import config_validation as cv
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+# Service schemas
+SERVICE_SET_RESERVE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_RESERVE_LEVEL): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=100)
+        ),
+    }
+)
+
+SERVICE_SET_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_OPERATION_MODE): vol.In(
+            [MODE_SELF_CONSUMPTION, MODE_BACKUP, MODE_AUTONOMOUS]
+        ),
+    }
+)
+
+SERVICE_SET_GRID_CHARGING_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_GRID_CHARGING): cv.boolean,
+    }
+)
 
 
 async def async_setup(hass: HomeAssistant, config: Config):
@@ -68,12 +101,96 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # Register services (only once for the domain)
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_RESERVE):
+        await _async_register_services(hass)
+
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
     )
 
     entry.add_update_listener(async_reload_entry)
     return True
+
+
+async def _async_register_services(hass: HomeAssistant) -> None:
+    """Register pw3 services."""
+
+    def _get_powerwall() -> Powerwall:
+        """Get the Powerwall instance from any entry."""
+        for entry_id, coordinator in hass.data[DOMAIN].items():
+            if hasattr(coordinator, "pw"):
+                return coordinator.pw
+        raise ValueError("No Powerwall instance available")
+
+    async def async_set_reserve(call: ServiceCall) -> None:
+        """Handle the set_reserve service call."""
+        reserve_level = call.data[ATTR_RESERVE_LEVEL]
+        _LOGGER.info(f"Setting Powerwall reserve level to {reserve_level}%")
+
+        try:
+            pw = _get_powerwall()
+            result = await hass.async_add_executor_job(pw.set_reserve, reserve_level)
+            if result:
+                _LOGGER.info(f"Successfully set reserve to {reserve_level}%")
+            else:
+                _LOGGER.warning(f"set_reserve returned: {result}")
+        except Exception as e:
+            _LOGGER.error(f"Failed to set reserve level: {e}")
+            raise
+
+    async def async_set_mode(call: ServiceCall) -> None:
+        """Handle the set_mode service call."""
+        mode = call.data[ATTR_OPERATION_MODE]
+        _LOGGER.info(f"Setting Powerwall operation mode to {mode}")
+
+        try:
+            pw = _get_powerwall()
+            result = await hass.async_add_executor_job(pw.set_mode, mode)
+            if result:
+                _LOGGER.info(f"Successfully set mode to {mode}")
+            else:
+                _LOGGER.warning(f"set_mode returned: {result}")
+        except Exception as e:
+            _LOGGER.error(f"Failed to set operation mode: {e}")
+            raise
+
+    async def async_set_grid_charging(call: ServiceCall) -> None:
+        """Handle the set_grid_charging service call."""
+        enabled = call.data[ATTR_GRID_CHARGING]
+        _LOGGER.info(f"Setting Powerwall grid charging to {enabled}")
+
+        try:
+            pw = _get_powerwall()
+            result = await hass.async_add_executor_job(pw.set_grid_charging, enabled)
+            if result:
+                _LOGGER.info(f"Successfully set grid charging to {enabled}")
+            else:
+                _LOGGER.warning(f"set_grid_charging returned: {result}")
+        except Exception as e:
+            _LOGGER.error(f"Failed to set grid charging: {e}")
+            raise
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_RESERVE,
+        async_set_reserve,
+        schema=SERVICE_SET_RESERVE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_MODE,
+        async_set_mode,
+        schema=SERVICE_SET_MODE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_GRID_CHARGING,
+        async_set_grid_charging,
+        schema=SERVICE_SET_GRID_CHARGING_SCHEMA,
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -7,6 +7,6 @@
   "documentation": "https://github.com/wilfredallyn/pw3",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/wilfredallyn/pw3/issues",
-  "requirements": ["pypowerwall"],
-  "version": "0.0.1"
+  "requirements": ["pypowerwall>=0.14.0"],
+  "version": "0.1.0"
 }

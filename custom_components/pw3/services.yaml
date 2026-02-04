@@ -1,0 +1,55 @@
+# Services for pw3 integration
+
+set_reserve:
+  name: Set Battery Reserve
+  description: Set the Powerwall battery backup reserve percentage. Higher values keep more energy reserved for backup; lower values allow more discharge.
+  fields:
+    reserve_level:
+      name: Reserve Level
+      description: Battery reserve percentage (0-100). Set to 100 to force charging, 0 to allow full discharge.
+      required: true
+      example: 20
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+
+set_mode:
+  name: Set Operation Mode
+  description: Set the Powerwall operation mode.
+  fields:
+    operation_mode:
+      name: Operation Mode
+      description: >
+        self_consumption: Use solar/battery to minimize grid usage.
+        backup: Prioritize keeping battery charged for outages.
+        autonomous: Let Tesla optimize based on Time-of-Use rates.
+      required: true
+      example: "self_consumption"
+      default: "self_consumption"
+      selector:
+        select:
+          options:
+            - label: "Self Consumption"
+              value: "self_consumption"
+            - label: "Backup Only"
+              value: "backup"
+            - label: "Autonomous (Time-Based Control)"
+              value: "autonomous"
+
+set_grid_charging:
+  name: Set Grid Charging
+  description: Enable or disable charging the Powerwall from the grid.
+  fields:
+    enabled:
+      name: Enabled
+      description: Whether to allow the Powerwall to charge from the grid.
+      required: true
+      example: true
+      default: false
+      selector:
+        boolean:
